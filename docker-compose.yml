@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  zenpay-api:
+    build: .
+    container_name: zenpay_backend_api
+    ports:
+      - "8000:8000"
+    environment:
+      - PROJECT_NAME=ZenPay Backend API
+      - DATABASE_URL=sqlite:///./zenpay.db
+      - DEBUG=True
+    volumes:
+      - .:/app
+    restart: unless-stopped
