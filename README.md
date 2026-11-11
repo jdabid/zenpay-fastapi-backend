@@ -94,7 +94,7 @@ zenpay-fastapi-backend/
 
 ### 1. Clonar el repositorio y entrar
 ```bash
-git clone https://github.com/capyzendev/zenpay-fastapi-backend.git
+git clone https://github.com/jdabid/zenpay-fastapi-backend.git
 cd zenpay-fastapi-backend
 ```
 
