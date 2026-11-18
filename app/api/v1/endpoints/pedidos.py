@@ -77,3 +77,31 @@ def calcular_descuento_promedio(pedido_id: int, db: Session = Depends(get_db)):
 def simular_fallo_imprevisto():
     """Endpoint de auditoría técnica que simula un fallo no previsto para probar el Escudo Global."""
     return {"resultado": 1 / 0}
+
+@router.post("/{pedido_id}/checkout-resiliente", tags=["Resiliencia"])
+async def checkout_con_circuit_breaker(
+    pedido_id: int,
+    proveedor_url: str = "https://httpbin.org/status/200",
+    db: Session = Depends(get_db)
+):
+    """
+    💳 Problema #03: Checkout Blindado con Circuit Breaker y Fallback Semántico.
+    Si el proveedor externo colapsa o supera el timeout de 2.0s, el Circuit Breaker
+    corta el tráfico y activa una experiencia VIP con descuento y QR en lugar de un error 503.
+    """
+    from app.core.circuit_breaker import servicio_checkout_con_fallback
+    
+    pedido = db.query(PedidoDB).filter(PedidoDB.id == pedido_id).first()
+    if not pedido:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"El pedido #{pedido_id} no existe para procesar checkout."
+        )
+
+    resultado = await servicio_checkout_con_fallback(
+        id_pedido=f"PED-{pedido.id}",
+        monto=pedido.monto,
+        url_proveedor=proveedor_url
+    )
+    return resultado
+

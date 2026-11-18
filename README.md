@@ -63,9 +63,10 @@ zenpay-fastapi-backend/
 │   │   └── v1/
 │   │       ├── endpoints/
 │   │       │   ├── health.py           # Health check endpoint
-│   │       │   └── pedidos.py          # CRUD de pedidos y lógica de pagos
+│   │       │   └── pedidos.py          # CRUD de pedidos y Checkout con Circuit Breaker
 │   │       └── api.py                  # Agregador de routers v1
 │   ├── core/
+│   │   ├── circuit_breaker.py          # Patrón Circuit Breaker & Fallback Semántico con IA
 │   │   ├── config.py                   # Configuración con pydantic-settings
 │   │   └── exceptions.py               # Escudos globales y manejo de errores 500
 │   ├── database/
@@ -75,10 +76,16 @@ zenpay-fastapi-backend/
 │   ├── schemas/
 │   │   └── pedido.py                   # Contratos DTO de entrada y salida
 │   └── main.py                         # Instancia central de FastAPI
+├── circuit_breaker/                    # ⚡ MÓDULO DEL VIDEO #03 (HTTPX & Circuit Breaker)
+│   ├── cliente_zen_circuit_breaker.py  # Solución resiliente ejecutable en terminal
+│   ├── cliente_inseguro.py             # Antipatrón común sin timeouts
+│   ├── test_circuit_breaker.py         # Suite de pruebas unitarias del fusible
+│   └── README.md                       # Guía de inicio rápido para el módulo
 ├── tests/
 │   ├── conftest.py                     # Fixtures aisladas en memoria para Pytest
 │   ├── test_pedidos.py                 # Tests de endpoints y reglas de negocio
-│   └── test_resiliencia.py             # Pruebas del Escudo Global (Cero caídas 500)
+│   ├── test_resiliencia.py             # Pruebas del Escudo Global y Fallback VIP
+│   └── test_circuit_breaker.py         # QA Automation del Circuit Breaker (7 tests)
 ├── .github/workflows/
 │   └── ci.yml                          # GitHub Actions CI Workflow
 ├── Dockerfile                          # Multi-stage production container
@@ -149,6 +156,34 @@ Si prefieres correrlo en un contenedor sin instalar Python en tu máquina local:
 
 ```bash
 docker-compose up --build
+```
+
+---
+
+## ⚡ 8. Problema #03: Circuit Breaker & Fallback con IA (Del Frío Error 503 a la Experiencia VIP)
+
+En el **Video #03 de Capyzen**, resolvemos el dolor crítico de muchas empresas: *«Un proveedor externo colapsó y congeló todo nuestro sistema»*.
+
+### ¿Cómo funciona el Circuit Breaker?
+Igual que un fusible eléctrico en tu casa:
+1. **CERRADO (Verde):** El tráfico fluye normalmente hacia la pasarela de pagos.
+2. **ABIERTO (Rojo):** Si 3 llamadas consecutivas fallan o superan el timeout estricto de 2.0s, el circuito se abre y **corta todo el tráfico de inmediato** para que el servidor no gaste memoria ni CPU esperando respuestas eternas.
+3. **SEMIABIERTO (Amarillo):** Tras un tiempo de enfriamiento (4 segundos), deja pasar una única llamada de prueba para verificar si el banco ya se recuperó.
+
+### El Rescate VIP con Inteligencia Artificial
+En lugar de mostrar una pantalla rota con `HTTP 503 Service Unavailable`, el sistema activa un **Fallback Semántico**:
+* Reserva el pedido del usuario por 2 horas en base de datos.
+* Genera un código QR seguro para pagar vía transferencia directa.
+* Le ofrece un **5% de descuento** compensatorio por las molestias.
+
+### Cómo ejecutar la demo en consola:
+```bash
+python circuit_breaker/cliente_zen_circuit_breaker.py
+```
+
+### Cómo correr las pruebas del Circuit Breaker:
+```bash
+pytest tests/test_circuit_breaker.py -v
 ```
 
 ---
